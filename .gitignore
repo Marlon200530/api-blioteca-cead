@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Logs
 logs
 *.log
@@ -137,3 +138,13 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+=======
+node_modules
+.env
+dist
+.DS_Store
+storage/pdfs/*
+storage/covers/*
+!storage/pdfs/.gitkeep
+!storage/covers/.gitkeep
+>>>>>>> b49a232 (Initial commit)

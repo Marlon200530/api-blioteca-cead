@@ -1,0 +1,1 @@
+e deixe o algoritmo de busca mais eficiente, busca por autor, 
