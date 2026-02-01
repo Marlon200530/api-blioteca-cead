@@ -6,30 +6,33 @@ import { validate } from '../../utils/validate.js';
 import { ok } from '../../utils/response.js';
 import { sanitizeOptionalText, sanitizeText } from '../../utils/sanitize.js';
 import bcrypt from 'bcrypt';
+import { AppError } from '../../utils/errors.js';
 
 const router = Router();
 
 const completeProfileSchema = z.object({
   curso: z.string().min(1),
-  ano: z.number().int().min(1),
-  semestre: z.number().int().min(1)
+  ano: z.number().int().min(1)
 });
 
 router.post(
   '/complete-profile',
   validate({ body: completeProfileSchema }),
   asyncHandler(async (req, res) => {
-    const { curso, ano, semestre } = req.body as z.infer<typeof completeProfileSchema>;
+    const { curso, ano } = req.body as z.infer<typeof completeProfileSchema>;
     const sanitizedCurso = sanitizeText(curso);
     const userId = req.user!.id;
+    if (req.user?.role === 'USER' && req.user?.curso && req.user?.ano) {
+      throw new AppError('Perfil já completo', 400, 'PROFILE_ALREADY_COMPLETED');
+    }
 
     await bibliotecaPool.query(
       `
       UPDATE user_profile
-      SET curso = $1, ano = $2, semestre = $3, completed_profile = true
-      WHERE user_id = $4
+      SET curso = $1, ano = $2, completed_profile = true
+      WHERE user_id = $3
       `,
-      [sanitizedCurso, ano, semestre, userId]
+      [sanitizedCurso, ano, userId]
     );
 
     const user = await bibliotecaPool.query(
@@ -49,8 +52,7 @@ router.post(
 const patchSchema = z.object({
   nome: z.string().min(1).optional(),
   curso: z.string().min(1).optional(),
-  ano: z.number().int().min(1).optional(),
-  semestre: z.number().int().min(1).optional()
+  ano: z.number().int().min(1).optional()
 });
 
 const changePasswordSchema = z.object({
@@ -62,7 +64,7 @@ router.patch(
   '/',
   validate({ body: patchSchema }),
   asyncHandler(async (req, res) => {
-    const { nome, curso, ano, semestre } = req.body as z.infer<typeof patchSchema>;
+    const { nome, curso, ano } = req.body as z.infer<typeof patchSchema>;
     const userId = req.user!.id;
     const sanitizedNome = nome ? sanitizeText(nome) : undefined;
     const sanitizedCurso = curso !== undefined ? sanitizeOptionalText(curso) : undefined;
@@ -74,16 +76,19 @@ router.patch(
       ]);
     }
 
-    if (sanitizedCurso || ano || semestre) {
+    if (req.user?.role === 'USER' && (sanitizedCurso || ano)) {
+      throw new AppError('Perfil gerido pela administração', 403, 'PROFILE_MANAGED_BY_ADMIN');
+    }
+
+    if (sanitizedCurso || ano) {
       await bibliotecaPool.query(
         `
         UPDATE user_profile
         SET curso = COALESCE($1, curso),
-            ano = COALESCE($2, ano),
-            semestre = COALESCE($3, semestre)
-        WHERE user_id = $4
+            ano = COALESCE($2, ano)
+        WHERE user_id = $3
         `,
-        [sanitizedCurso ?? null, ano ?? null, semestre ?? null, userId]
+        [sanitizedCurso ?? null, ano ?? null, userId]
       );
     }
 

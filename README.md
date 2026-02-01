@@ -98,6 +98,18 @@ curl -X POST -H "Authorization: Bearer <token>" http://localhost:4000/api/favori
 - **CEAD**: 3 utilizadores (`CEAD001..003`) com password `Password123!`.
 - **Biblioteca**: 1 admin (`ADMIN001`) com password `Admin123!`.
 
+## Migrations/Seeders (biblioteca_db)
+```
+npm run migrate:up
+npm run seed:up
+```
+
+Para reverter:
+```
+npm run seed:down
+npm run migrate:down
+```
+
 ## Estrutura
 ```
 src/
@@ -113,4 +125,5 @@ src/
     reading-progress/
   server.ts
 ```
+
 >>>>>>> b49a232 (Initial commit)

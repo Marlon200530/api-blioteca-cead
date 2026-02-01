@@ -6,9 +6,15 @@ if (!env.databaseUrlCead || !env.databaseUrlBiblioteca) {
 }
 
 export const ceadPool = new Pool({
-  connectionString: env.databaseUrlCead
+  connectionString: env.databaseUrlCead,
+  max: env.pgPoolMax,
+  idleTimeoutMillis: env.pgIdleTimeoutMs,
+  connectionTimeoutMillis: env.pgConnTimeoutMs
 });
 
 export const bibliotecaPool = new Pool({
-  connectionString: env.databaseUrlBiblioteca
+  connectionString: env.databaseUrlBiblioteca,
+  max: env.pgPoolMax,
+  idleTimeoutMillis: env.pgIdleTimeoutMs,
+  connectionTimeoutMillis: env.pgConnTimeoutMs
 });

@@ -6,10 +6,15 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate:up": "node-pg-migrate up -m ./migrations -c ./migrate.config.cjs --envPath .env -d DATABASE_URL_BIBLIOTECA --single-transaction=false",
+    "migrate:down": "node-pg-migrate down -m ./migrations -c ./migrate.config.cjs --envPath .env -d DATABASE_URL_BIBLIOTECA --single-transaction=false",
+    "seed:up": "node-pg-migrate up -m ./seeders -c ./migrate.config.cjs --envPath .env -d DATABASE_URL_BIBLIOTECA",
+    "seed:down": "node-pg-migrate down -m ./seeders -c ./migrate.config.cjs --envPath .env -d DATABASE_URL_BIBLIOTECA"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -26,6 +31,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
+    "@types/compression": "^1.7.5",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.6",
@@ -34,6 +40,7 @@
     "@types/node": "^20.14.10",
     "@types/pg": "^8.11.10",
     "@types/uuid": "^10.0.0",
+    "node-pg-migrate": "^7.9.1",
     "tsx": "^4.16.2",
     "typescript": "^5.5.4"
   }

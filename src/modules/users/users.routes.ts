@@ -18,7 +18,6 @@ const listQuerySchema = z.object({
   status: z.enum(['ATIVO', 'INATIVO']).optional(),
   curso: z.string().optional(),
   ano: z.coerce.number().int().optional(),
-  semestre: z.coerce.number().int().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20)
 });
@@ -29,8 +28,7 @@ const createUserSchema = z.object({
   role: z.enum(['USER', 'GESTOR_CONTEUDO', 'ADMIN']).optional(),
   status: z.enum(['ATIVO', 'INATIVO']).optional(),
   curso: z.string().optional(),
-  ano: z.number().int().min(1).optional(),
-  semestre: z.number().int().min(1).optional()
+  ano: z.number().int().min(1).optional()
 });
 
 const updateUserSchema = z.object({
@@ -39,8 +37,7 @@ const updateUserSchema = z.object({
   role: z.enum(['USER', 'GESTOR_CONTEUDO', 'ADMIN']).optional(),
   status: z.enum(['ATIVO', 'INATIVO']).optional(),
   curso: z.string().optional(),
-  ano: z.number().int().min(1).optional(),
-  semestre: z.number().int().min(1).optional()
+  ano: z.number().int().min(1).optional()
 });
 
 const paramsSchema = z.object({
@@ -104,11 +101,6 @@ router.get(
       values.push(sanitized.ano);
       where.push(`p.ano = $${values.length}`);
     }
-    if (sanitized.semestre) {
-      values.push(sanitized.semestre);
-      where.push(`p.semestre = $${values.length}`);
-    }
-
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const page = sanitized.page ?? 1;
     const limit = sanitized.limit ?? 20;
@@ -180,11 +172,6 @@ router.get(
       values.push(sanitized.ano);
       where.push(`p.ano = $${values.length}`);
     }
-    if (sanitized.semestre) {
-      values.push(sanitized.semestre);
-      where.push(`p.semestre = $${values.length}`);
-    }
-
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const result = await bibliotecaPool.query(
       `
@@ -312,7 +299,7 @@ router.post(
     const role = sanitized.role ?? 'USER';
     const status = sanitized.status ?? 'ATIVO';
     const passwordHash = await bcrypt.hash('123456', 10);
-    const completedProfile = role !== 'USER' ? true : Boolean(sanitized.curso && sanitized.ano && sanitized.semestre);
+    const completedProfile = role !== 'USER' ? true : Boolean(sanitized.curso && sanitized.ano);
 
     const client = await bibliotecaPool.connect();
     try {
@@ -332,7 +319,7 @@ router.post(
         INSERT INTO user_profile (user_id, curso, ano, semestre, completed_profile)
         VALUES ($1, $2, $3, $4, $5)
         `,
-        [user.id, sanitized.curso ?? null, sanitized.ano ?? null, sanitized.semestre ?? null, completedProfile]
+        [user.id, sanitized.curso ?? null, sanitized.ano ?? null, null, completedProfile]
       );
 
       await client.query('COMMIT');
@@ -346,7 +333,7 @@ router.post(
         ...user,
         curso: sanitized.curso ?? null,
         ano: sanitized.ano ?? null,
-        semestre: sanitized.semestre ?? null,
+        semestre: null,
         completed_profile: completedProfile
       }));
     } catch (err) {
@@ -393,8 +380,8 @@ router.patch(
     const nextRole = sanitized.role ?? current.role;
     const nextCurso = sanitized.curso !== undefined ? sanitized.curso : current.curso;
     const nextAno = sanitized.ano !== undefined ? sanitized.ano : current.ano;
-    const nextSemestre = sanitized.semestre !== undefined ? sanitized.semestre : current.semestre;
-    const completedProfile = nextRole !== 'USER' ? true : Boolean(nextCurso && nextAno && nextSemestre);
+    const nextSemestre = current.semestre;
+    const completedProfile = nextRole !== 'USER' ? true : Boolean(nextCurso && nextAno);
 
     const client = await bibliotecaPool.connect();
     try {

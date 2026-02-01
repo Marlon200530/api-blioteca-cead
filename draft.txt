@@ -1,1 +1,39 @@
-e deixe o algoritmo de busca mais eficiente, busca por autor, 
+Melhorias para deixar o projeto “premium”
+
+1) Produto & UX
+
+Busca inteligente: autocomplete, sugestões recentes, filtros salvos por usuário.
+Leitor avançado: notas, highlights, índice navegável, última página sincronizada.
+Coleções/Playlists: materiais agrupados por curso/tema, compartilháveis.
+Onboarding: fluxo guiado (perfil, interesses, favoritos) para personalizar o feed.
+2) Confiabilidade & Performance
+
+CDN para capas + cache inteligente no backend (ETag/Cache-Control).
+Paginação consistente em todas listagens, com “cursor pagination” para grandes volumes.
+Fila de processamento para uploads (compressão, validação, OCR) evitando bloquear requests.
+3) Segurança & Compliance
+
+Rotação de JWT e refresh tokens.
+Auditoria detalhada (quem leu, quem baixou).
+Rate limit por rota + proteção contra abuso de download.
+Logs estruturados (JSON) com correlação de request.
+4) Qualidade & Observabilidade
+
+Testes: unitários (services) + integração (rotas) + e2e crítico.
+Monitoring: métricas (latência, erro, throughput), alertas e healthchecks reais.
+Sentry ou equivalente para front/back.
+5) Experiência Admin
+
+Dashboard real com KPIs (leituras, materiais por curso, engajamento).
+Gestão de conteúdo: versões de PDF, histórico de alterações.
+Importação em massa: CSV/ZIP para adicionar materiais.
+6) Escalabilidade
+
+Storage externo (S3/MinIO) para PDFs/capas.
+Indice de busca (Postgres full-text ou Elastic/Meilisearch).
+Cache de respostas (Redis) para endpoints pesados.
+Se quiser, posso:
+
+montar um roadmap curto (MVP premium em 2–4 semanas),
+priorizar por impacto/tempo,
+começar a implementar um pacote específico (ex.: search premium + cache).

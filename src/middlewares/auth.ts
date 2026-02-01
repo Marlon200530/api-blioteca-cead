@@ -45,7 +45,19 @@ export const authMiddleware = async (req: Request, _res: Response, next: NextFun
       return;
     }
 
-    req.user = rows[0];
+    const user = rows[0];
+    try {
+      const academic = await bibliotecaPool.query<{ current_semester: number }>(
+        `SELECT current_semester FROM academic_settings WHERE id = 1`
+      );
+      if (academic.rows[0]?.current_semester) {
+        user.semestre = academic.rows[0].current_semester;
+      }
+    } catch {
+      // ignore academic settings failures
+    }
+
+    req.user = user;
     next();
   } catch {
     next(new AppError('Token inválido', 401, 'INVALID_TOKEN'));

@@ -18,5 +18,9 @@ export const env = {
   databaseUrlCead: process.env.DATABASE_URL_CEAD ?? '',
   databaseUrlBiblioteca: process.env.DATABASE_URL_BIBLIOTECA ?? '',
   storagePdfDir: process.env.STORAGE_PDF_DIR ?? 'storage/pdfs',
-  storageCoverDir: process.env.STORAGE_COVER_DIR ?? 'storage/covers'
+  storageCoverDir: process.env.STORAGE_COVER_DIR ?? 'storage/covers',
+  logFormat: process.env.LOG_FORMAT ?? 'dev',
+  pgPoolMax: Number(process.env.PG_POOL_MAX ?? 10),
+  pgIdleTimeoutMs: Number(process.env.PG_IDLE_TIMEOUT_MS ?? 30000),
+  pgConnTimeoutMs: Number(process.env.PG_CONN_TIMEOUT_MS ?? 5000)
 };
