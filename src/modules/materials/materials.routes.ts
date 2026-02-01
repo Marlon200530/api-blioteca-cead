@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
-import multer from 'multer';
+import multer, { type FileFilterCallback } from 'multer';
 import sharp from 'sharp';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,7 +37,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req, file, cb: FileFilterCallback) => {
     const ext = path.extname(file.originalname || '').toLowerCase();
     if (file.fieldname === 'pdf') {
       const validMime = file.mimetype === 'application/pdf';
@@ -45,7 +45,11 @@ const upload = multer({
       if (!validMime || !validExt) {
         console.warn('[upload] PDF rejeitado', { mime: file.mimetype, ext, name: file.originalname });
       }
-      cb(validMime && validExt ? null : new Error('PDF inválido.'), validMime && validExt);
+      if (!validMime || !validExt) {
+        cb(new Error('PDF inválido.'));
+        return;
+      }
+      cb(null, true);
       return;
     }
     if (file.fieldname === 'capa') {
@@ -54,7 +58,11 @@ const upload = multer({
       if (!validMime || !validExt) {
         console.warn('[upload] Capa rejeitada', { mime: file.mimetype, ext, name: file.originalname });
       }
-      cb(validMime && validExt ? null : new Error('Capa inválida.'), validMime && validExt);
+      if (!validMime || !validExt) {
+        cb(new Error('Capa inválida.'));
+        return;
+      }
+      cb(null, true);
       return;
     }
     cb(new Error('Campo de ficheiro inválido'));
