@@ -1,15 +1,12 @@
-<<<<<<< HEAD
-# api-blioteca-cead
-=======
 # Biblioteca Virtual Académica (API)
 
 Backend completo em Node.js + TypeScript + Express com duas bases PostgreSQL simuladas (CEAD e Biblioteca) e streaming protegido de PDFs com suporte a Range Requests.
 
 ## Requisitos
 - Node.js 18+
-- Docker + Docker Compose
+- Docker + Docker Compose (opcional para bases)
 
-## Setup rápido
+## Setup rápido (desenvolvimento)
 1) Subir bases de dados:
 ```
 docker compose up
@@ -26,6 +23,24 @@ npm run dev
 ```
 
 API por defeito em `http://localhost:4000`.
+
+## Produção (VMware)
+1) Instalar Node.js 18+ e PostgreSQL.
+2) Configurar `.env` com valores reais (não usar `JWT_SECRET=super-secret`).
+3) Instalar dependências sem dev:
+```
+npm ci --omit=dev
+```
+4) Compilar e iniciar:
+```
+npm run build
+NODE_ENV=production node dist/server.js
+```
+5) Executar migrations/seeders conforme necessário:
+```
+npm run migrate:up
+npm run seed:up
+```
 
 ## Variáveis de ambiente
 - `DATABASE_URL_CEAD` e `DATABASE_URL_BIBLIOTECA`
@@ -125,5 +140,8 @@ src/
     reading-progress/
   server.ts
 ```
+<<<<<<< HEAD
 
 >>>>>>> b49a232 (Initial commit)
+=======
+>>>>>>> a4b6ced (Normalize line endings to LF)

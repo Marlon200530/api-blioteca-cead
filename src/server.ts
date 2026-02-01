@@ -23,6 +23,7 @@ import coursesRoutes from './modules/courses/courses.routes.js';
 import academicRoutes from './modules/academic/academic.routes.js';
 
 const app = express();
+app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
@@ -55,7 +56,12 @@ app.use(
 );
 app.use(compression());
 app.use(express.json({ limit: '2mb' }));
+<<<<<<< HEAD
 app.use(morgan(env.nodeEnv === 'production' ? env.logFormat : 'dev'));
+=======
+const morganFormat = env.nodeEnv === 'production' ? 'combined' : 'dev';
+app.use(morgan(morganFormat));
+>>>>>>> a4b6ced (Normalize line endings to LF)
 
 app.get('/health', (_req, res) => {
   res.json({ message: 'ok' });
@@ -94,6 +100,7 @@ const server = app.listen(env.port, () => {
   console.log(`API running on http://localhost:${env.port}`);
 });
 
+<<<<<<< HEAD
 const shutdown = async () => {
   server.close(() => {
     // eslint-disable-next-line no-console
@@ -108,3 +115,27 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+=======
+const shutdown = (signal: string) => {
+  // eslint-disable-next-line no-console
+  console.log(`Received ${signal}, shutting down...`);
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+
+process.on('unhandledRejection', (reason) => {
+  // eslint-disable-next-line no-console
+  console.error('Unhandled rejection:', reason);
+  shutdown('unhandledRejection');
+});
+
+process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
+  console.error('Uncaught exception:', err);
+  shutdown('uncaughtException');
+});
+>>>>>>> a4b6ced (Normalize line endings to LF)
