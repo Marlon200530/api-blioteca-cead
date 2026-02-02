@@ -71,6 +71,10 @@ const upload = multer({
 });
 
 const fromArray = (value: unknown) => (Array.isArray(value) ? value[0] : value);
+const toArray = (value: unknown) => {
+  if (value === undefined || value === null || value === '') return undefined;
+  return Array.isArray(value) ? value : [value];
+};
 
 const baseMaterialSchema = z.object({
   titulo: z.preprocess(fromArray, z.string().min(1)),
@@ -78,6 +82,8 @@ const baseMaterialSchema = z.object({
   kind: z.preprocess(fromArray, z.enum(['MODULO', 'PUBLICACAO'])),
   visibility: z.preprocess(fromArray, z.enum(['PUBLICO', 'PRIVADO']).optional()),
   curso: z.preprocess(fromArray, z.string().optional()),
+  cursos: z.preprocess(toArray, z.array(z.string().min(1)).optional()),
+  cursosAll: z.preprocess(fromArray, z.coerce.boolean().optional()),
   ano: z.coerce.number().int().min(1).optional(),
   semestre: z.coerce.number().int().min(1).optional(),
   materialType: z.preprocess(fromArray, z.enum([
@@ -86,7 +92,6 @@ const baseMaterialSchema = z.object({
     'ARTIGO_REVISTA',
     'MANUAL',
     'TEMA_TRANSVERSAL',
-    'APOSTILA',
     'RELATORIO_TECNICO',
     'TESE',
     'DISSERTACAO',
@@ -232,6 +237,10 @@ router.get(
           unaccent(m.titulo) ILIKE unaccent($${values.length})
           OR unaccent(m.descricao) ILIKE unaccent($${values.length})
           OR unaccent(m.curso) ILIKE unaccent($${values.length})
+          OR EXISTS (
+            SELECT 1 FROM unnest(COALESCE(m.cursos, ARRAY[]::text[])) c
+            WHERE unaccent(c) ILIKE unaccent($${values.length})
+          )
           OR unaccent(m.autor) ILIKE unaccent($${values.length})
         )`
       );
@@ -246,7 +255,7 @@ router.get(
     }
     if (sanitizedQuery.curso) {
       values.push(sanitizedQuery.curso);
-      where.push(`m.curso = $${values.length}`);
+      where.push(`(m.curso = $${values.length} OR $${values.length} = ANY(COALESCE(m.cursos, ARRAY[]::text[])))`);
     }
     if (sanitizedQuery.ano) {
       values.push(sanitizedQuery.ano);
@@ -375,7 +384,12 @@ router.get(
       FROM materials m
       WHERE m.kind = 'MODULO'
         AND m.status = 'ATIVO'
-        AND m.curso = $1
+        AND (
+          m.curso = $1
+          OR $1 = ANY(COALESCE(m.cursos, ARRAY[]::text[]))
+          OR m.cursos IS NULL
+          OR array_length(m.cursos, 1) IS NULL
+        )
       ORDER BY m.updated_at DESC
       `,
       [user.curso]
@@ -422,15 +436,23 @@ router.post(
         titulo: sanitizeText(payload.titulo),
         descricao: sanitizeOptionalText(payload.descricao),
         curso: sanitizeOptionalText(payload.curso),
+        cursos: payload.cursos?.map((c) => sanitizeText(c)),
+        cursosAll: payload.cursosAll ?? false,
         autor: sanitizeOptionalText(payload.autor)
       };
 
       if (!pdf) throw new AppError('PDF é obrigatório', 400, 'PDF_REQUIRED');
+      if (sanitized.kind === 'MODULO' && !sanitized.cursosAll && (!sanitized.cursos || sanitized.cursos.length === 0) && !sanitized.curso) {
+        throw new AppError('Curso é obrigatório para módulos', 400, 'COURSE_REQUIRED');
+      }
       if (sanitized.kind === 'MODULO' && !capa) {
         throw new AppError('Capa é obrigatória para MODULO', 400, 'COVER_REQUIRED');
       }
       if (sanitized.kind === 'PUBLICACAO' && !sanitized.materialType) {
         throw new AppError('materialType é obrigatório para PUBLICACAO', 400, 'MATERIAL_TYPE_REQUIRED');
+      }
+      if (sanitized.kind === 'PUBLICACAO' && (sanitized.visibility ?? 'PRIVADO') === 'PRIVADO' && !sanitized.curso) {
+        throw new AppError('Curso é obrigatório para publicações privadas', 400, 'COURSE_REQUIRED');
       }
       if (pdf && !(await isValidPdfFile(pdf))) {
         await cleanupFiles([pdf, ...(capa ? [capa] : [])]);
@@ -463,10 +485,10 @@ router.post(
       const insert = await bibliotecaPool.query(
         `
         INSERT INTO materials (
-          titulo, descricao, kind, visibility, curso, ano, semestre,
+          titulo, descricao, kind, visibility, curso, cursos, ano, semestre,
           material_type, autor, ano_publicacao, capa_path, pdf_path
         )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
         RETURNING *
         `,
         [
@@ -474,7 +496,8 @@ router.post(
           sanitized.descricao ?? null,
           sanitized.kind,
           visibility,
-          sanitized.curso ?? null,
+          sanitized.kind === 'MODULO' ? null : (sanitized.curso ?? null),
+          sanitized.kind === 'MODULO' ? (sanitized.cursosAll ? null : (sanitized.cursos ?? null)) : null,
           sanitized.ano ?? null,
           sanitized.semestre ?? null,
           sanitized.materialType ?? null,
@@ -507,6 +530,7 @@ router.patch(
       titulo: payload.titulo ? sanitizeText(payload.titulo) : undefined,
       descricao: payload.descricao !== undefined ? sanitizeOptionalText(payload.descricao) : undefined,
       curso: payload.curso !== undefined ? sanitizeOptionalText(payload.curso) : undefined,
+      cursos: payload.cursos ? payload.cursos.map((c) => sanitizeText(c)) : undefined,
       autor: payload.autor !== undefined ? sanitizeOptionalText(payload.autor) : undefined
     };
 
@@ -523,6 +547,7 @@ router.patch(
     if (sanitized.kind) mapField('kind', sanitized.kind);
     if (sanitized.visibility && sanitized.kind !== 'MODULO') mapField('visibility', sanitized.visibility);
     if (sanitized.curso !== undefined) mapField('curso', sanitized.curso ?? null);
+    if (sanitized.cursos !== undefined) mapField('cursos', sanitized.cursos ?? null);
     if (sanitized.ano !== undefined) mapField('ano', sanitized.ano ?? null);
     if (sanitized.semestre !== undefined) mapField('semestre', sanitized.semestre ?? null);
     if (sanitized.materialType !== undefined) mapField('material_type', sanitized.materialType ?? null);

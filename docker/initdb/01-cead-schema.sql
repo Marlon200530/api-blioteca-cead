@@ -13,3 +13,7 @@ INSERT INTO cead_users (codigo, nome, password_hash) VALUES
   ('CEAD002', 'Bruno Costa', crypt('Password123!', gen_salt('bf'))),
   ('CEAD003', 'Carla Mendes', crypt('Password123!', gen_salt('bf')))
 ON CONFLICT (codigo) DO NOTHING;
+
+
+
+

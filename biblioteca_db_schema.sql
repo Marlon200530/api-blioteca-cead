@@ -203,6 +203,7 @@ CREATE TABLE public.materials (
     visibility public.material_visibility DEFAULT 'PRIVADO'::public.material_visibility NOT NULL,
     status public.material_status DEFAULT 'ATIVO'::public.material_status NOT NULL,
     curso text,
+    cursos text[],
     ano integer,
     semestre integer,
     material_type public.material_type,
@@ -256,6 +257,7 @@ CREATE TABLE public.reading_progress (
     current_page integer DEFAULT 0 NOT NULL,
     total_pages integer DEFAULT 0 NOT NULL,
     percentage numeric(5,2) DEFAULT 0 NOT NULL,
+    reading_time_seconds integer DEFAULT 0 NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
@@ -546,4 +548,3 @@ ALTER TABLE ONLY public.user_profile
 --
 
 \unrestrict SnOKE9SU3o5nMHeOpmjay5v6rlnOrkQPnBJzyAqRnDchXrXlfkrSZE2OCplBSuH
-

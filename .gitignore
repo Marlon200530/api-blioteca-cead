@@ -143,3 +143,6 @@ storage/pdfs/*
 storage/covers/*
 !storage/pdfs/.gitkeep
 !storage/covers/.gitkeep
+
+# Database dumps
+*_dump.sql

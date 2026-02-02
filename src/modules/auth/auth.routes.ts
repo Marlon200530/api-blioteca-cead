@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Response } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -16,6 +16,19 @@ const loginSchema = z.object({
   codigo: z.string().min(1),
   password: z.string().min(1),
 });
+
+const setAuthCookie = (res: Response, token: string) => {
+  res.cookie(env.jwtCookieName, token, {
+    httpOnly: true,
+    sameSite: env.jwtCookieSameSite,
+    secure: env.jwtCookieSecure,
+    path: '/',
+  });
+};
+
+const clearAuthCookie = (res: Response) => {
+  res.clearCookie(env.jwtCookieName, { path: '/' });
+};
 
 router.post(
   "/login",
@@ -50,6 +63,8 @@ router.post(
       const token = jwt.sign({ sub: user.id }, env.jwtSecret, {
         expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"],
       });
+
+      setAuthCookie(res, token);
 
       const isStaff = user.role === "ADMIN" || user.role === "GESTOR_CONTEUDO";
       res.json(
@@ -105,6 +120,8 @@ router.post(
       expiresIn: env.jwtExpiresIn as jwt.SignOptions["expiresIn"],
     });
 
+    setAuthCookie(res, token);
+
     const isStaff = user.role === "ADMIN" || user.role === "GESTOR_CONTEUDO";
     res.json(
       ok({
@@ -120,6 +137,7 @@ router.post(
 router.post(
   "/logout",
   asyncHandler(async (_req, res) => {
+    clearAuthCookie(res);
     res.json(ok({ message: "logged-out" }));
   }),
 );

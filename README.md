@@ -42,6 +42,13 @@ npm run migrate:up
 npm run seed:up
 ```
 
+### Nginx + systemd (sem HTTPS)
+- Nginx config: `deploy/nginx.conf` (ajuste caminhos se necessário).
+- Systemd unit: `deploy/systemd/api-biblioteca.service`.
+- Frontend deve estar em `/var/www/academic-library-explorer/dist`.
+- API deve rodar em `http://127.0.0.1:4000`.
+- Se não houver HTTPS, defina `JWT_COOKIE_SECURE=false` no `.env`.
+
 ## Variáveis de ambiente
 - `DATABASE_URL_CEAD` e `DATABASE_URL_BIBLIOTECA`
 - `JWT_SECRET` e `JWT_EXPIRES_IN`
@@ -140,8 +147,3 @@ src/
     reading-progress/
   server.ts
 ```
-<<<<<<< HEAD
-
->>>>>>> b49a232 (Initial commit)
-=======
->>>>>>> a4b6ced (Normalize line endings to LF)

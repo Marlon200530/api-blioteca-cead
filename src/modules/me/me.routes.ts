@@ -57,7 +57,7 @@ const patchSchema = z.object({
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1).optional(),
-  newPassword: z.string().min(6)
+  newPassword: z.string().min(8)
 });
 
 router.patch(

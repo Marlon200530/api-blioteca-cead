@@ -7,14 +7,26 @@ import { AuthUser } from '../types/user.js';
 
 type TokenPayload = { sub: string };
 
+const getCookieValue = (cookieHeader: string, name: string) => {
+  const parts = cookieHeader.split(';').map((part) => part.trim());
+  const target = parts.find((part) => part.startsWith(`${name}=`));
+  if (!target) return undefined;
+  return decodeURIComponent(target.slice(name.length + 1));
+};
+
 export const authMiddleware = async (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  let token: string | undefined;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.replace('Bearer ', '').trim();
+  } else if (req.headers.cookie) {
+    token = getCookieValue(req.headers.cookie, env.jwtCookieName);
+  }
+
+  if (!token) {
     next(new AppError('Não autenticado', 401, 'UNAUTHENTICATED'));
     return;
   }
-
-  const token = authHeader.replace('Bearer ', '').trim();
   try {
     const payload = jwt.verify(token, env.jwtSecret) as TokenPayload;
     const userId = payload.sub;

@@ -25,6 +25,7 @@ const listQuerySchema = z.object({
 const createUserSchema = z.object({
   codigo: z.string().min(1),
   nome: z.string().min(1),
+  password: z.string().min(8),
   role: z.enum(['USER', 'GESTOR_CONTEUDO', 'ADMIN']).optional(),
   status: z.enum(['ATIVO', 'INATIVO']).optional(),
   curso: z.string().optional(),
@@ -298,7 +299,7 @@ router.post(
 
     const role = sanitized.role ?? 'USER';
     const status = sanitized.status ?? 'ATIVO';
-    const passwordHash = await bcrypt.hash('123456', 10);
+    const passwordHash = await bcrypt.hash(payload.password, 10);
     const completedProfile = role !== 'USER' ? true : Boolean(sanitized.curso && sanitized.ano);
 
     const client = await bibliotecaPool.connect();
@@ -458,7 +459,7 @@ router.post(
   requireRole(['ADMIN']),
   validate({
     params: paramsSchema,
-    body: z.object({ password: z.string().min(6) })
+    body: z.object({ password: z.string().min(8) })
   }),
   asyncHandler(async (req, res) => {
     const { id } = req.params as z.infer<typeof paramsSchema>;

@@ -1,0 +1,16 @@
+[Unit]
+Description=API Biblioteca Virtual CEAD
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/api-biblioteca-virtual-cead
+Environment=NODE_ENV=production
+Environment=PORT=4000
+EnvironmentFile=/opt/api-biblioteca-virtual-cead/.env
+ExecStart=/usr/bin/node /opt/api-biblioteca-virtual-cead/dist/server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

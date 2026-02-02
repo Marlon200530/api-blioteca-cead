@@ -21,6 +21,9 @@ const bodySchema = z.object({
   currentPage: z.number().int().min(0),
   totalPages: z.number().int().min(0)
 });
+const timeSchema = z.object({
+  seconds: z.number().int().min(1).max(60 * 60)
+});
 
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).optional(),
@@ -176,6 +179,30 @@ router.put(
                     updated_at = now()
       `,
       [req.user!.id, materialId, currentPage, totalPages, percentage]
+    );
+
+    res.status(204).end();
+  })
+);
+
+router.put(
+  '/:materialId/time',
+  validate({ params: paramsSchema, body: timeSchema }),
+  asyncHandler(async (req, res) => {
+    const { materialId } = req.params as z.infer<typeof paramsSchema>;
+    const { seconds } = req.body as z.infer<typeof timeSchema>;
+
+    await ensureMaterialAccess(req.user!, materialId);
+
+    await bibliotecaPool.query(
+      `
+      INSERT INTO reading_progress (user_id, material_id, reading_time_seconds, updated_at)
+      VALUES ($1, $2, $3, now())
+      ON CONFLICT (user_id, material_id)
+      DO UPDATE SET reading_time_seconds = reading_progress.reading_time_seconds + EXCLUDED.reading_time_seconds,
+                    updated_at = now()
+      `,
+      [req.user!.id, materialId, seconds]
     );
 
     res.status(204).end();

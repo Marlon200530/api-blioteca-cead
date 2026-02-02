@@ -56,7 +56,6 @@ router.get('/material-types', (_req, res) => {
       'ARTIGO_REVISTA',
       'MANUAL',
       'TEMA_TRANSVERSAL',
-      'APOSTILA',
       'RELATORIO_TECNICO',
       'TESE',
       'DISSERTACAO',

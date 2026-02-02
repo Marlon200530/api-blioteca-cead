@@ -26,7 +26,6 @@ DO $$ BEGIN
       'ARTIGO_REVISTA',
       'MANUAL',
       'TEMA_TRANSVERSAL',
-      'APOSTILA',
       'RELATORIO_TECNICO',
       'TESE',
       'DISSERTACAO',
@@ -86,6 +85,7 @@ CREATE TABLE IF NOT EXISTS reading_progress (
   current_page INTEGER NOT NULL DEFAULT 0,
   total_pages INTEGER NOT NULL DEFAULT 0,
   percentage NUMERIC(5,2) NOT NULL DEFAULT 0,
+  reading_time_seconds INTEGER NOT NULL DEFAULT 0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, material_id)
 );

@@ -29,7 +29,6 @@ const listQuerySchema = z.object({
 const isPublicMaterial = (material: any) =>
   material &&
   material.status === 'ATIVO' &&
-  material.kind === 'PUBLICACAO' &&
   material.visibility === 'PUBLICO';
 
 const getCoverContentType = (filePath: string) => {
@@ -61,13 +60,17 @@ router.get(
           unaccent(m.titulo) ILIKE unaccent($${values.length})
           OR unaccent(m.descricao) ILIKE unaccent($${values.length})
           OR unaccent(m.curso) ILIKE unaccent($${values.length})
+          OR EXISTS (
+            SELECT 1 FROM unnest(COALESCE(m.cursos, ARRAY[]::text[])) c
+            WHERE unaccent(c) ILIKE unaccent($${values.length})
+          )
           OR unaccent(m.autor) ILIKE unaccent($${values.length})
         )`
       );
     }
     if (sanitizedQuery.curso) {
       values.push(sanitizedQuery.curso);
-      where.push(`m.curso = $${values.length}`);
+      where.push(`(m.curso = $${values.length} OR $${values.length} = ANY(COALESCE(m.cursos, ARRAY[]::text[])))`);
     }
     if (sanitizedQuery.ano) {
       values.push(sanitizedQuery.ano);
@@ -87,7 +90,6 @@ router.get(
     }
 
     where.push(`m.status = 'ATIVO'`);
-    where.push(`m.kind = 'PUBLICACAO'`);
     where.push(`m.visibility = 'PUBLICO'`);
     // Public materials only
 
